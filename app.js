@@ -8,6 +8,9 @@ require("dotenv").config();
 //mongodb connection
 mongoose.connect(process.env.MONGODB_URI);
 
+//middlewares
+app.use(express.json());
+
 //Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
