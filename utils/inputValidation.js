@@ -1,4 +1,5 @@
 const { DateTime } = require("luxon");
+const { ObjectId } = require("mongodb");
 const z = require("zod");
 const isvalid = {};
 
@@ -59,6 +60,14 @@ isvalid.dueDate = function (val) {
   } else {
     return false;
   }
+};
+
+isvalid.mongoid = function (id) {
+  const res = ObjectId.isValid(id);
+  if (res) {
+    return true;
+  }
+  return false;
 };
 
 module.exports = { isvalid };
