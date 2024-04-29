@@ -17,17 +17,18 @@ const UserSchema = new mongoose.Schema({
     required: true,
   },
   createdAt: {
-    type: String,
+    type: Date,
     immutable: true,
-    default: () => DateTime.now().toISO(),
+    default: () => new Date(),
   },
   updatedAt: {
-    type: String,
-    default: () => DateTime.now().toISO(),
+    type: Date,
+    default: () => new Date(),
   },
 });
 
 UserSchema.pre("save", async function (next) {
+  //hash the password
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -35,7 +36,7 @@ UserSchema.pre("save", async function (next) {
 
   //update the updatedAt field before saving the document
   if (!this.isNew) {
-    this.updatedAt = DateTime.now().toISO();
+    this.updatedAt = new Date();
   }
   next();
 });
