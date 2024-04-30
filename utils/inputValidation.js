@@ -103,12 +103,12 @@ isvalid.string = function (val, minLength = 0) {
   return false;
 };
 
-isvalid.mongoid = function (id) {
-  const res = mongoose.Types.ObjectId.isValid(id);
+isvalid.mongoid = function (val) {
+  const res = mongoose.Types.ObjectId.isValid(val);
   if (res) {
     return true;
   }
-  return false;
+  throw new Error("invalid todoId");
 };
 
 isvalid.boolean = function (val) {

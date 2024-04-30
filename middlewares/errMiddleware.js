@@ -88,6 +88,25 @@ const errMiddleware = (error, req, res, next) => {
     });
   }
 
+  //invalid todoId
+  else if (error.message === "invalid todoId") {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "INVALID_TODOID",
+        msg: "todoId in invalid",
+      },
+    });
+  }
+
+  //TODO_NOT_FOUND
+  else if ((error.message = "todo not found")) {
+    return res.status(404).json({
+      code: "TODO_NOT_FOUND",
+      msg: "Todo not found or user unauthorized",
+    });
+  }
+
   //internal server error
   else {
     console.log(error);

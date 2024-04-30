@@ -57,27 +57,27 @@ const createTodo = async (req, res, next) => {
   }
 };
 
-const getTodo = async (req, res) => {
-  const { todoId } = req.params;
+const getTodo = async (req, res, next) => {
+  try {
+    // fetch todoId from url params
+    const { todoId } = req.params;
 
-  //Todo id validation
-  if (!isvalid.mongoid(todoId)) {
-    return res
-      .status(400)
-      .json(err.validationErrorResponse("id", "todoId is not valid"));
+    //todoId validation
+    isvalid.mongoid(todoId); // throws error
+
+    //Finding todo with specific id and only if this todo belongs to user who have requested
+    const todo = await Todo.findOne({ _id: todoId, userId: req.userId }); //returns todo or null
+    if (!todo) {
+      throw new Error("todo not found");
+    }
+
+    //responde with fetched todo from databse
+    res.status(200).json({ success: true, todo });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
   }
-
-  //Finding todo with specific id and only if this todo belongs to user who have requested
-  const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
-  if (!todo) {
-    return res.status(404).json({
-      code: "NOT_FOUND",
-      field: "todo",
-      msg: "Todo not found or user unauthorized",
-    });
-  }
-
-  res.status(200).json({ success: true, todo });
 };
 
 const updateTodo = async (req, res) => {
