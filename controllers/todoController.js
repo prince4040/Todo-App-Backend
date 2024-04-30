@@ -168,4 +168,29 @@ const updateTodo = async (req, res) => {
   }
 };
 
-module.exports = { getAllTodos, createTodo, getTodo, updateTodo };
+const deleteTodo = async (req, res) => {
+  const { todoId } = req.params;
+
+  if (!isvalid.mongoid(todoId)) {
+    return res
+      .status(400)
+      .json(err.validationErrorResponse("todoId", "todoId is not valid"));
+  }
+
+  const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
+  if (!todo) {
+    return res.status(404).json({
+      success: false,
+      err: {
+        code: "NOT_FOUND",
+        field: "todo",
+        msg: "todo not found with this id or User anauthorized",
+      },
+    });
+  }
+
+  await Todo.deleteOne({ _id: todoId });
+  res.status(200).json({ success: true, msg: "successfully deleted todo" });
+};
+
+module.exports = { getAllTodos, createTodo, getTodo, updateTodo, deleteTodo };
