@@ -1,3 +1,4 @@
+const { JsonWebTokenError } = require("jsonwebtoken");
 const z = require("zod");
 
 const errMiddleware = (error, req, res, next) => {
@@ -24,7 +25,7 @@ const errMiddleware = (error, req, res, next) => {
   else if (error.message === "user already exists") {
     return res.status(409).json({
       success: false,
-      err: {
+      error: {
         code: "USER_ALREADY_EXISTS",
         message: "user already exists with this email",
       },
@@ -35,9 +36,9 @@ const errMiddleware = (error, req, res, next) => {
   else if (error.message === "user not found") {
     return res.status(404).json({
       success: false,
-      err: {
+      error: {
         code: "USER_NOT_FOUND",
-        message: "user not found with this email",
+        message: "user not found",
       },
     });
   }
@@ -46,10 +47,32 @@ const errMiddleware = (error, req, res, next) => {
   else if (error.message === "invalid password") {
     return res.status(401).json({
       success: false,
-      err: {
+      error: {
         code: "INVALID_PASSWORD",
         field: "password",
         message: "password is not valid",
+      },
+    });
+  }
+
+  //TOKEN_NOT_PROVIDED
+  else if (error.message === "token not provided") {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "TOKEN_NOT_PROVIDED",
+        message: "jwt token is not provided or is in invalid format",
+      },
+    });
+  }
+
+  //jwt verification error
+  else if (error instanceof JsonWebTokenError) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: "INVALID_TOKEN",
+        msg: "Invalid JWT Token",
       },
     });
   }
@@ -59,7 +82,7 @@ const errMiddleware = (error, req, res, next) => {
     console.log(error);
     return res.status(500).json({
       success: false,
-      err: {
+      error: {
         code: "INTERNAL_SERVER_ERROR",
         msg: "Internal Server Error",
       },

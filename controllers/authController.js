@@ -10,12 +10,12 @@ const signup = async (req, res, next) => {
     const { name, email, password } = req.body;
 
     //input validation
-    isvalid.name(name);
-    isvalid.email(email);
-    isvalid.password(password);
+    isvalid.name(name); //throws error
+    isvalid.email(email); //throws error
+    isvalid.password(password); //throws error
 
     //Database check - if user with this email already exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }); //returns user or null
     if (user) {
       throw new Error("user already exists");
     }
@@ -40,18 +40,18 @@ const signin = async (req, res, next) => {
     const { email, password } = req.body;
 
     //input validation
-    isvalid.email(email);
-    isvalid.password(password);
+    isvalid.email(email); //throws error
+    isvalid.password(password); //throws error
 
     //find the user in database
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }); // returns user or null
     //if user not found in databse
     if (!user) {
       throw new Error("user not found");
     }
 
     //verify the password
-    const isvalidPassword = await bcrypt.compare(password, user.password);
+    const isvalidPassword = await bcrypt.compare(password, user.password); //returns true or false
     //if password provided by user in wrong
     if (!isvalidPassword) {
       throw new Error("invalid password");

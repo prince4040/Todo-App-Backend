@@ -5,37 +5,30 @@ require("dotenv").config();
 //verification of jwt token
 const authMiddleware = async (req, res, next) => {
   try {
-    // const { authorization } = req.headers;
-    // const token = authorization.split(" ")[1];
+    //fetching authorization header if present
     const token = req.headers.authorization?.split(" ")[1];
-
     if (!token) {
-      throw new Error("JWT token not provided");
+      throw new Error("token not provided");
     }
 
     //verify jwt token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); //throws error
+    //setting userId and email to request object
     req.userId = decoded.userId;
-    const user = await User.findOne({ _id: req.userId });
+    req.email = decoded.email;
+
+    //verifing that user exists in database
+    const user = await User.findOne({ _id: decoded.userId }); //returns user or null
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        err: {
-          code: "USER_NOT_FOUND",
-          msg: "user not found with given id",
-        },
-      });
+      throw new Error("user not found");
     }
+
+    //calling next middleware if token verified
     next();
-  } catch (e) {
-    console.error("JWT verification error:", e);
-    return res.status(401).json({
-      success: false,
-      err: {
-        code: "INVALID_TOKEN",
-        msg: "Invalid JWT Token",
-      },
-    });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
   }
 };
 
