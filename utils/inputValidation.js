@@ -6,12 +6,14 @@ const isvalid = {};
 
 isvalid.email = function (val) {
   const emailSchema = z.string().email();
-  const response = emailSchema.safeParse(val);
 
-  if (response.success) {
-    return true;
+  try {
+    const response = emailSchema.parse(val);
+    return response;
+  } catch (error) {
+    error.field = "email";
+    throw error;
   }
-  return false;
 };
 
 isvalid.password = function (val) {
@@ -19,13 +21,25 @@ isvalid.password = function (val) {
     .string()
     .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/);
 
-  const response = passSchema.safeParse(val);
-
-  if (response.success) {
-    return true;
+  try {
+    const response = passSchema.parse(val);
+    return response;
+  } catch (error) {
+    error.field = "password";
+    throw error;
   }
+};
 
-  return false;
+isvalid.name = function (val) {
+  const nameSchema = z.string().min(2);
+
+  try {
+    const response = nameSchema.parse(val);
+    return response;
+  } catch (error) {
+    error.field = "name";
+    throw error;
+  }
 };
 
 isvalid.string = function (val, minLength = 0) {

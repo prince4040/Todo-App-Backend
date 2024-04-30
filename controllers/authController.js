@@ -4,105 +4,82 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const signup = async (req, res) => {
-  const { name, email, password } = req.body;
+const signup = async (req, res, next) => {
+  try {
+    // fetching name,email,password from request body
+    const { name, email, password } = req.body;
 
-  //input validation
-  if (!isvalid.email(email)) {
-    return res.status(400).json({
-      success: false,
-      err: {
-        code: "VALIDATION_ERROR",
-        field: "email",
-        msg: "email is not of valid format",
-      },
-    });
-  }
-  if (!isvalid.password(password)) {
-    return res.status(400).json({
-      success: false,
-      err: {
-        code: "VALIDATION_ERROR",
-        field: "password",
-        msg: "password is not of valid format",
-      },
-    });
-  }
+    //input validation
+    isvalid.name(name);
+    isvalid.email(email);
+    isvalid.password(password);
 
-  //Database check - if user with this email already exists
-  const user = await User.findOne({ email });
-  if (user) {
-    return res.status(409).json({
-      success: false,
-      err: {
-        code: "USER_ALREADY_EXISTS",
-        field: "",
-        msg: "user already exists with this email",
-      },
-    });
-  }
+    //Database check - if user with this email already exists
+    const user = await User.findOne({ email });
+    if (user) {
+      throw new Error("user already exists");
+    }
 
-  //creating user in databse
-  await User.create({ name, email, password });
-  res.status(201).json({ success: true, msg: "User created successfully" });
+    //creating user in databse
+    const newUser = await User.create({ name, email, password });
+    res.status(201).json({
+      success: true,
+      msg: "User created successfully",
+      user: { _id: newUser._id, name: newUser.name, email: newUser.email },
+    });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
+  }
 };
 
-const signin = async (req, res) => {
-  const { email, password } = req.body;
+const signin = async (req, res, next) => {
+  try {
+    //fetching email,password from request body
+    const { email, password } = req.body;
 
-  //input validation
-  if (!isvalid.email(email)) {
-    return res.status(400).json({
-      success: false,
-      err: {
-        code: "VALIDATION_ERROR",
-        field: "email",
-        msg: "email is not of valid format",
-      },
-    });
-  }
+    //input validation
+    isvalid.email(email);
+    isvalid.password(password);
 
-  //find the user in database
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      err: {
-        code: "USER_NOT_FOUND",
-        msg: "user not found with this email",
-      },
-    });
-  }
-
-  //verify the password
-  const isvalidPassword = await bcrypt.compare(password, user.password);
-  if (!isvalidPassword) {
-    return res.status(401).json({
-      success: false,
-      err: {
-        code: "INVALID",
-        field: "password",
-        msg: "password is not valid",
-      },
-    });
-  }
-
-  //Generate the jwt
-  const token = jwt.sign(
-    {
-      userId: user._id.toString(),
-      email: user.email,
-      iss: "prince-saliya",
-      role: "user",
-      //iat, exp
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "30d",
+    //find the user in database
+    const user = await User.findOne({ email });
+    //if user not found in databse
+    if (!user) {
+      throw new Error("user not found");
     }
-  );
 
-  res.status(200).json({ success: true, token });
+    //verify the password
+    const isvalidPassword = await bcrypt.compare(password, user.password);
+    //if password provided by user in wrong
+    if (!isvalidPassword) {
+      throw new Error("invalid password");
+    }
+
+    //User is authorized
+    //Generate the jwt token
+    const token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        email: user.email,
+        iss: "prince-saliya",
+        role: "user",
+        //iat, exp
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+
+    //responding with success and token
+    res.status(200).json({ success: true, token });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
+  }
 };
 
 module.exports = { signup, signin };
