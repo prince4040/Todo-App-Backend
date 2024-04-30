@@ -117,29 +117,31 @@ const updateTodo = async (req, res, next) => {
   }
 };
 
-const deleteTodo = async (req, res) => {
-  const { todoId } = req.params;
+const deleteTodo = async (req, res, next) => {
+  try {
+    //fetching todoId from url params
+    const { todoId } = req.params;
 
-  if (!isvalid.mongoid(todoId)) {
-    return res
-      .status(400)
-      .json(err.validationErrorResponse("todoId", "todoId is not valid"));
+    // input validation
+    isvalid.mongoid(todoId); //trows error
+
+    //finding the todo from database
+    const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
+    if (!todo) {
+      throw new Error("todo not found");
+    }
+
+    //deleting the todo
+    await Todo.deleteOne({ _id: todoId });
+    //responding with success message
+    res
+      .status(200)
+      .json({ success: true, msg: "successfully deleted the todo" });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
   }
-
-  const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
-  if (!todo) {
-    return res.status(404).json({
-      success: false,
-      err: {
-        code: "NOT_FOUND",
-        field: "todo",
-        msg: "todo not found with this id or User anauthorized",
-      },
-    });
-  }
-
-  await Todo.deleteOne({ _id: todoId });
-  res.status(200).json({ success: true, msg: "successfully deleted todo" });
 };
 
 module.exports = { getAllTodos, createTodo, getTodo, updateTodo, deleteTodo };

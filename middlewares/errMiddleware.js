@@ -72,7 +72,7 @@ const errMiddleware = (error, req, res, next) => {
       success: false,
       error: {
         code: "INVALID_TOKEN",
-        msg: "Invalid JWT Token",
+        message: "Invalid JWT Token",
       },
     });
   }
@@ -83,7 +83,7 @@ const errMiddleware = (error, req, res, next) => {
       success: false,
       error: {
         code: "INVALID_DATE",
-        msg: "Date is already passed",
+        message: "Date is already passed",
       },
     });
   }
@@ -94,7 +94,7 @@ const errMiddleware = (error, req, res, next) => {
       success: false,
       error: {
         code: "INVALID_TODOID",
-        msg: "todoId in invalid",
+        message: "todoId in invalid",
       },
     });
   }
@@ -102,16 +102,22 @@ const errMiddleware = (error, req, res, next) => {
   //TODO_NOT_FOUND
   else if (error.message === "todo not found") {
     return res.status(404).json({
-      code: "TODO_NOT_FOUND",
-      msg: "Todo not found or user unauthorized",
+      success: false,
+      error: {
+        code: "TODO_NOT_FOUND",
+        message: "Todo not found or user unauthorized",
+      },
     });
   }
 
   //no fields in body
   else if (error.message === "no fields in body") {
     return res.status(400).json({
-      code: "NO_FIELDS_FOUND",
-      msg: "No fields found to update todo",
+      success: false,
+      error: {
+        code: "NO_FIELDS_FOUND",
+        message: "No fields found to update todo",
+      },
     });
   }
 
@@ -122,7 +128,7 @@ const errMiddleware = (error, req, res, next) => {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        msg: "Internal Server Error",
+        message: "Internal Server Error",
       },
     });
   }
