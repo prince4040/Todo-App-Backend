@@ -6,14 +6,24 @@ const { isvalid } = require("../utils/inputValidation");
 const err = require("../utils/errorFunctions");
 
 const getAllTodos = async (req, res) => {
-  const user = await User.findOne({ _id: req.userId });
-  const todos = await Todo.find({ userId: req.userId }).sort({ dueDate: -1 });
+  try {
+    //finding the user from databse
+    const user = await User.findOne({ _id: req.userId });
 
-  res.status(200).json({
-    success: true,
-    useInfo: { name: user.name, email: user.email },
-    todos,
-  });
+    //finding all the todos of user and sort them in ascending order of dueDate
+    const todos = await Todo.find({ userId: req.userId }).sort({ dueDate: 1 });
+
+    //responding with userInfo and all the todos
+    res.status(200).json({
+      success: true,
+      userInfo: { name: user.name, email: user.email },
+      todos,
+    });
+
+    //catching and transmitting all the errors to global catch
+  } catch (error) {
+    return next(error);
+  }
 };
 
 const createTodo = async (req, res, next) => {
