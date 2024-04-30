@@ -80,78 +80,40 @@ const getTodo = async (req, res, next) => {
   }
 };
 
-const updateTodo = async (req, res) => {
-  //fetch the todoId from params
-  const { todoId } = req.params;
-  if (!isvalid.mongoid(todoId)) {
-    return res
-      .status(400)
-      .json(
-        err.validationErrorResponse(
-          "todoId",
-          "incorrect todoId in the url params"
-        )
-      );
-  }
-
-  //zod schema
-  const schema = z
-    .object({
-      title: z.string().min(1),
-      description: z.string(),
-      dueDate: z.coerce.date(),
-      completed: z.boolean(),
-    })
-    .partial();
-
+const updateTodo = async (req, res, next) => {
   try {
-    const data = schema.parse(req.body);
+    //fetch the todoId from params
+    const { todoId } = req.params;
 
-    //if there is no field in the body
+    //input validation
+    isvalid.mongoid(todoId); //throws error
+
+    //request body validation
+    //This 'isvalid.updateTodoValidation' function checks all the fields of request body like 'title','description', 'dueDate', 'completed' and returns a object with available fields if verification succeeds. If any extra fields are coming with req.body then that fields will not be included in returned object
+    const data = isvalid.updateTodoValidation(req.body); //throws error, can give empty object
+
+    //checking that received obj is not empty
     if (Object.keys(data).length === 0) {
-      return res
-        .status(400)
-        .json(err.validationErrorResponse("all", "No fields found to update"));
+      throw new Error("no fields in body");
     }
 
-    //find the todo from the databse
+    //finding the todo from the database
     const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
     if (!todo) {
-      res.status(404).json({
-        success: false,
-        err: {
-          code: "NOT_FOUND",
-          field: "todo",
-          msg: "Todo not found with this id or User unauthorized",
-        },
-      });
+      throw new Error("todo not found");
     }
 
+    //updating the todo
     Object.assign(todo, data);
+    //saving the todo to database
     await todo.save();
 
+    //responding with success messsage
     res.status(200).json({ success: true, msg: "todo updated successfully" });
 
-    //catch the errors
+    //catching and transmitting all the errors to global catch
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: error.errors.map((e) => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    } else {
-      console.log(error);
-      return res.status(500).json({
-        success: false,
-        err: {
-          code: "INTERNAL_SERVER_ERROR",
-          msg: "Internal Server Error",
-        },
-      });
-    }
+    return next(error);
   }
 };
 

@@ -111,6 +111,35 @@ isvalid.mongoid = function (val) {
   throw new Error("invalid todoId");
 };
 
+isvalid.updateTodoValidation = function (obj) {
+  const schema = z
+    .object({
+      title: z.string().min(1),
+      description: z.string(),
+      dueDate: z.coerce.date(),
+      completed: z.boolean(),
+    })
+    .partial();
+
+  try {
+    const response = schema.parse(obj);
+
+    if (response.dueDate) {
+      const currDate = new Date();
+      const date = response.dueDate;
+
+      if (date.getTime() <= currDate.getTime()) {
+        throw new Error("date passed");
+      }
+    }
+
+    return response;
+  } catch (error) {
+    error.field = "dueDate";
+    throw error;
+  }
+};
+
 isvalid.boolean = function (val) {
   const booleanSchema = z.boolean();
   if (booleanSchema.safeParse(val).success) {
