@@ -1,4 +1,5 @@
 const { DateTime } = require("luxon");
+const z = require("zod");
 const Todo = require("../models/todo");
 const User = require("../models/user");
 const { isvalid } = require("../utils/inputValidation");
@@ -92,4 +93,79 @@ const getTodo = async (req, res) => {
   res.status(200).json({ success: true, todo });
 };
 
-module.exports = { getAllTodos, createTodo, getTodo };
+const updateTodo = async (req, res) => {
+  //fetch the todoId from params
+  const { todoId } = req.params;
+  if (!isvalid.mongoid(todoId)) {
+    return res
+      .status(400)
+      .json(
+        err.validationErrorResponse(
+          "todoId",
+          "incorrect todoId in the url params"
+        )
+      );
+  }
+
+  //zod schema
+  const schema = z
+    .object({
+      title: z.string().min(1),
+      description: z.string(),
+      dueDate: z.coerce.date(),
+      completed: z.boolean(),
+    })
+    .partial();
+
+  try {
+    const data = schema.parse(req.body);
+
+    //if there is no field in the body
+    if (Object.keys(data).length === 0) {
+      return res
+        .status(400)
+        .json(err.validationErrorResponse("all", "No fields found to update"));
+    }
+
+    //find the todo from the databse
+    const todo = await Todo.findOne({ _id: todoId, userId: req.userId });
+    if (!todo) {
+      res.status(404).json({
+        success: false,
+        err: {
+          code: "NOT_FOUND",
+          field: "todo",
+          msg: "Todo not found with this id or User unauthorized",
+        },
+      });
+    }
+
+    Object.assign(todo, data);
+    await todo.save();
+
+    res.status(200).json({ success: true, msg: "todo updated successfully" });
+
+    //catch the errors
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: error.errors.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        })),
+      });
+    } else {
+      console.log(error);
+      return res.status(500).json({
+        success: false,
+        err: {
+          code: "INTERNAL_SERVER_ERROR",
+          msg: "Internal Server Error",
+        },
+      });
+    }
+  }
+};
+
+module.exports = { getAllTodos, createTodo, getTodo, updateTodo };

@@ -1,5 +1,6 @@
 const { DateTime } = require("luxon");
 const { ObjectId } = require("mongodb");
+const mongoose = require("mongoose");
 const z = require("zod");
 const isvalid = {};
 
@@ -46,25 +47,33 @@ isvalid.date = function (val) {
 };
 
 isvalid.dueDate = function (val) {
-  const dateSchema = z.string(z.date());
+  const dateSchema = z.coerce.date();
   const response = dateSchema.safeParse(val);
-
-  if (!response) {
+  if (!response.success) {
     return false;
   }
 
-  const currDate = DateTime.now();
-  const date = DateTime.fromISO(val);
-  if (date > currDate) {
+  const currDate = new Date();
+  const date = response.data;
+
+  if (date.getTime() >= currDate.getTime()) {
     return true;
-  } else {
-    return false;
   }
+
+  return false;
 };
 
 isvalid.mongoid = function (id) {
-  const res = ObjectId.isValid(id);
+  const res = mongoose.Types.ObjectId.isValid(id);
   if (res) {
+    return true;
+  }
+  return false;
+};
+
+isvalid.boolean = function (val) {
+  const booleanSchema = z.boolean();
+  if (booleanSchema.safeParse(val).success) {
     return true;
   }
   return false;
