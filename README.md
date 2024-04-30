@@ -89,7 +89,7 @@ A todo application built with Node.js, Express, and MongoDB.
 
 ## Contributors
 
-- [Your Name](https://github.com/prince4040)
+- [Prince Saliya](https://github.com/prince4040)
 
 ## License
 
