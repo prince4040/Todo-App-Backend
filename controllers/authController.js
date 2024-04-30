@@ -24,8 +24,8 @@ const signup = async (req, res, next) => {
     const newUser = await User.create({ name, email, password });
     res.status(201).json({
       success: true,
-      msg: "User created successfully",
-      user: { _id: newUser._id, name: newUser.name, email: newUser.email },
+      message: "User created successfully",
+      data: { _id: newUser._id, name: newUser.name, email: newUser.email },
     });
 
     //catching and transmitting all the errors to global catch
@@ -74,7 +74,9 @@ const signin = async (req, res, next) => {
     );
 
     //responding with success and token
-    res.status(200).json({ success: true, token });
+    res
+      .status(200)
+      .json({ success: true, message: "token generated successfully", token });
 
     //catching and transmitting all the errors to global catch
   } catch (error) {

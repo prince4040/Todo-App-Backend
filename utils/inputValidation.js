@@ -42,16 +42,51 @@ isvalid.name = function (val) {
   }
 };
 
-isvalid.string = function (val, minLength = 0) {
-  const schema = z.string().min(minLength);
-  if (schema.safeParse(val).success) {
-    return true;
+isvalid.title = function (val) {
+  const schema = z.string().min(1);
+
+  try {
+    const response = schema.parse(val);
+    return response;
+  } catch (error) {
+    error.field = "title";
+    throw error;
   }
-  return false;
+};
+
+isvalid.description = function (val) {
+  const schema = z.string();
+
+  try {
+    const response = schema.parse(val);
+    return response;
+  } catch (error) {
+    error.field = "description";
+    throw error;
+  }
+};
+
+isvalid.dueDate = function (val) {
+  const dateSchema = z.coerce.date();
+
+  try {
+    const response = dateSchema.parse(val);
+
+    const currDate = new Date();
+    const date = response;
+
+    if (date.getTime() <= currDate.getTime()) {
+      throw new Error("date passed");
+    }
+    return response;
+  } catch (error) {
+    error.field = "dueDate";
+    throw error;
+  }
 };
 
 isvalid.date = function (val) {
-  const dateSchema = z.string(z.date());
+  const dateSchema = z.coerce.date();
 
   const response = dateSchema.safeParse(val);
   if (response.success) {
@@ -60,20 +95,11 @@ isvalid.date = function (val) {
   return false;
 };
 
-isvalid.dueDate = function (val) {
-  const dateSchema = z.coerce.date();
-  const response = dateSchema.safeParse(val);
-  if (!response.success) {
-    return false;
-  }
-
-  const currDate = new Date();
-  const date = response.data;
-
-  if (date.getTime() >= currDate.getTime()) {
+isvalid.string = function (val, minLength = 0) {
+  const schema = z.string().min(minLength);
+  if (schema.safeParse(val).success) {
     return true;
   }
-
   return false;
 };
 

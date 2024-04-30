@@ -77,6 +77,17 @@ const errMiddleware = (error, req, res, next) => {
     });
   }
 
+  //date passed
+  else if (error.message === "date passed") {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "INVALID_DATE",
+        msg: "Date is already passed",
+      },
+    });
+  }
+
   //internal server error
   else {
     console.log(error);

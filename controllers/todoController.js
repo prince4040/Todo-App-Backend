@@ -16,30 +16,17 @@ const getAllTodos = async (req, res) => {
   });
 };
 
-const createTodo = async (req, res) => {
-  const { title, description, dueDate } = req.body;
-  //Input validation
-  if (!isvalid.string(title, 1)) {
-    return res
-      .status(400)
-      .json(err.validationErrorResponse("title", "title is not valid"));
-  }
-  if (!isvalid.string(description)) {
-    return res
-      .status(400)
-      .json(
-        err.validationErrorResponse("description", "description is not valid")
-      );
-  }
-  if (!isvalid.dueDate(dueDate)) {
-    return res
-      .status(400)
-      .json(
-        err.validationErrorResponse("dueDate", "dueDate is not of valid format")
-      );
-  }
-
+const createTodo = async (req, res, next) => {
   try {
+    //fetching title,description,dueDate from request body
+    const { title, description, dueDate } = req.body;
+
+    //input validation
+    isvalid.title(title); //throws error
+    isvalid.description(description); //throws error
+    isvalid.dueDate(dueDate); //throws error
+
+    //creating todo in the database
     const todo = await Todo.create({
       title,
       description,
@@ -47,26 +34,16 @@ const createTodo = async (req, res) => {
       userId: req.userId,
     });
 
+    //responding success message with newly created todoId
     res.status(201).json({
       success: true,
-      todoId: todo._id.toString(),
-      msg: "todo created",
+      message: "todo created",
+      data: { todoId: todo._id.toString() },
     });
 
-    //Catch the error when dueDate parsing is fail in mongoose
+    //catching and transmitting all the errors to global catch
   } catch (error) {
-    if (error.errors && error.errors.dueDate) {
-      return res
-        .status(400)
-        .json(
-          err.validationErrorResponse(
-            "dueDate",
-            "dueDate is not of valid format"
-          )
-        );
-    } else {
-      return res.status(500).json(err.internalServerErrorResponse());
-    }
+    return next(error);
   }
 };
 
