@@ -7,10 +7,13 @@ const errMiddleware = require("./middlewares/errMiddleware");
 require("dotenv").config();
 
 //mongodb connection
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI).then(() => {
+  console.log("mongodb connection successful");
+});
 
 //middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 //Routes
 app.use("/api/auth", authRoutes);
